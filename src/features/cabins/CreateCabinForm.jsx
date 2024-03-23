@@ -1,7 +1,6 @@
-import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { createCabin } from "../../services/apiCabins";
+import { toast } from "react-hot-toast";
+import PropTypes from "prop-types";
 
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
@@ -10,12 +9,19 @@ import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import FormRow from "../../ui/FormRow";
 
-const CreateCabinForm = () => {
-  const { register, handleSubmit, reset, getValues, formState } = useForm();
+import { useForm } from "react-hook-form";
+import { createEditCabin } from "../../services/apiCabins";
+
+const CreateCabinForm = ({ cabinToEdit = {} }) => {
+  const { id: editId, ...editValues } = cabinToEdit;
+  const isEditSession = Boolean(editId);
+  const { register, handleSubmit, reset, getValues, formState } = useForm({
+    defaultValues: isEditSession ? editValues : {},
+  });
   const { errors } = formState;
   const queryClient = useQueryClient();
-  const { mutate, isLoading: isCreating } = useMutation({
-    mutationFn: createCabin,
+  const { mutate: createCabin, isLoading: isCreating } = useMutation({
+    mutationFn: createEditCabin,
     onSuccess: () => {
       toast.success("New cabin successfully created");
       queryClient.invalidateQueries({ queryKey: ["cabins"] });
@@ -24,8 +30,23 @@ const CreateCabinForm = () => {
     onError: (err) => toast.error(err.message),
   });
 
+  const { mutate: editCabin, isLoading: isEdditing } = useMutation({
+    mutationFn: ({ newCabinData, id }) => createEditCabin(newCabinData, id),
+    onSuccess: () => {
+      toast.success("Cabin successfully edited");
+      queryClient.invalidateQueries({ queryKey: ["cabins"] });
+      reset();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const isWorking = isCreating || isEdditing;
+
   const onSubmit = (data) => {
-    mutate({ ...data, image: data.image[0] });
+    const image = typeof data.image === "string" ? data.image : data.image[0];
+    if (isEditSession)
+      editCabin({ newCabinData: { ...data, image }, id: editId });
+    else createCabin({ ...data, image: image });
   };
 
   // eslint-disable-next-line no-unused-vars
@@ -94,7 +115,7 @@ const CreateCabinForm = () => {
         <Textarea
           type="number"
           id="description"
-          defaultValue=""
+          defaultValue={isWorking}
           {...register("description", {
             required: "This field is required",
           })}
@@ -106,7 +127,7 @@ const CreateCabinForm = () => {
           id="image"
           accept="image/*"
           {...register("image", {
-            required: "This field is required",
+            required: isEditSession ? false : "This field is required",
           })}
         />
       </FormRow>
@@ -116,10 +137,16 @@ const CreateCabinForm = () => {
         <Button variation="secondary" type="reset">
           Cancel
         </Button>
-        <Button disabled={isCreating}>Add cabin</Button>
+        <Button disabled={isWorking}>
+          {isEditSession ? "Edit cabin" : "Create new cabin"}
+        </Button>
       </FormRow>
     </Form>
   );
+};
+
+CreateCabinForm.propTypes = {
+  cabinToEdit: PropTypes.object,
 };
 
 export default CreateCabinForm;
