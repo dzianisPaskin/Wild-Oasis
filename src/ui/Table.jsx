@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+import { createContext, useContext } from "react";
 import styled from "styled-components";
 
 const StyledTable = styled.div`
@@ -36,9 +38,9 @@ const StyledRow = styled(CommonRow)`
   }
 `;
 
-const StyledBody = styled.section`
-  margin: 0.4rem 0;
-`;
+// const StyledBody = styled.section`
+//   margin: 0.4rem 0;
+// `;
 
 const Footer = styled.footer`
   background-color: var(--color-grey-50);
@@ -52,9 +54,63 @@ const Footer = styled.footer`
   }
 `;
 
-const Empty = styled.p`
-  font-size: 1.6rem;
-  font-weight: 500;
-  text-align: center;
-  margin: 2.4rem;
-`;
+// const Empty = styled.p`
+//   font-size: 1.6rem;
+//   font-weight: 500;
+//   text-align: center;
+//   margin: 2.4rem;
+// `;
+
+const TableContext = createContext();
+
+const Table = ({ columns, children }) => {
+  return (
+    <TableContext.Provider value={{ columns, children }}>
+      <StyledTable role="table">{children}</StyledTable>
+    </TableContext.Provider>
+  );
+};
+
+const Header = ({ children }) => {
+  const { columns } = useContext(TableContext);
+
+  return (
+    <StyledHeader role="row" columns={columns} as="header">
+      {children}
+    </StyledHeader>
+  );
+};
+const Row = ({ children }) => {
+  const { columns } = useContext(TableContext);
+
+  return (
+    <StyledRow role="row" columns={columns}>
+      {children}
+    </StyledRow>
+  );
+};
+// const Body = ({ children }) => {};
+
+Table.Header = Header;
+Table.Row = Row;
+// Table.Body = Body;
+Table.Footer = Footer;
+
+Table.propTypes = {
+  columns: PropTypes.string,
+  children: PropTypes.node,
+};
+
+Header.propTypes = {
+  children: PropTypes.node,
+};
+
+Row.propTypes = {
+  children: PropTypes.node,
+};
+
+// Body.propTypes = {
+//   children: PropTypes.node,
+// };
+
+export default Table;
