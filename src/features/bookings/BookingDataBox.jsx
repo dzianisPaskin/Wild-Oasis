@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import styled from "styled-components";
 import { format, isToday } from "date-fns";
 import {
@@ -183,5 +184,9 @@ function BookingDataBox({ booking }) {
     </StyledBookingDataBox>
   );
 }
+
+BookingDataBox.propTypes = {
+  booking: PropTypes.object,
+};
 
 export default BookingDataBox;
