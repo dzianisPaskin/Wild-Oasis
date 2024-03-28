@@ -18,9 +18,6 @@ export const useCheckin = () => {
       toast.success(`Booking #${data.id} successfully checked in`);
       queryClient.invalidateQueries({ active: true });
       navigate("/");
-      // queryClient.invalidateQueries({ queryKey: ["cabins"] });
-      // queryClient.invalidateQueries({ queryKey: ["users"] });
-      // queryClient.invalidateQueries({ queryKey: ["bookings", "checked-in"] });
     },
 
     onError: () => toast.error("There was an error while checking in"),
